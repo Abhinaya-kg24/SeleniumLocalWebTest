@@ -1,25 +1,41 @@
+```java
 import java.io.File;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class LocalLoginTest {
+
     WebDriver driver;
 
     @BeforeMethod
     public void setUp() {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        ChromeOptions options = new ChromeOptions();
 
-        String page = new File("webpage/login.html")
-                .getAbsoluteFile()
-                .toURI()
-                .toString();
+        // Required for running Chrome in GitHub Actions
+        options.addArguments("--headless=new");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
 
+        driver = new ChromeDriver(options);
+
+        File htmlFile = new File("webpage/login.html");
+
+        Assert.assertTrue(
+            htmlFile.exists(),
+            "Login page not found: " + htmlFile.getAbsolutePath()
+        );
+
+        String page = htmlFile.getAbsoluteFile().toURI().toString();
         driver.get(page);
     }
 
@@ -30,7 +46,9 @@ public class LocalLoginTest {
         driver.findElement(By.id("loginButton")).click();
 
         String message = driver.findElement(By.id("message")).getText();
+
         System.out.println("Message: " + message);
+
         Assert.assertEquals(message, "Login Successful");
     }
 
@@ -41,22 +59,33 @@ public class LocalLoginTest {
         driver.findElement(By.id("loginButton")).click();
 
         String message = driver.findElement(By.id("message")).getText();
+
         System.out.println("Message: " + message);
-        Assert.assertEquals(message, "Invalid Username or Password");
+
+        Assert.assertEquals(
+            message,
+            "Invalid Username or Password"
+        );
     }
 
     @Test
     public void checkBackgroundColor() {
-        String bgColor =
-            driver.findElement(By.id("loginBox"))
-                  .getCssValue("background-color");
+        String bgColor = driver.findElement(By.id("loginBox"))
+                               .getCssValue("background-color");
 
         System.out.println("Background Color: " + bgColor);
-        Assert.assertEquals(bgColor, "rgba(173, 216, 230, 1)");
+
+        Assert.assertEquals(
+            bgColor,
+            "rgba(173, 216, 230, 1)"
+        );
     }
 
     @AfterMethod
     public void tearDown() {
-        driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }
+```
